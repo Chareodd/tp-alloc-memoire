@@ -61,8 +61,8 @@ void *mem_alloc(size_t taille) {
 	__attribute__((unused)) /* juste pour que gcc compile ce squelette avec -Werror */
 	struct fb *fb = mem_fit_fn(first_fb, taille);
 	if (fb == NULL) return NULL;	//si il n'y pas de mémoire disponible, inutile de continuer
-	int taille_ini = fb->size ;
-	struct fb *prev_fb = first_fb;
+	size_t taille_ini = fb->size ;
+	struct fb *prev_fb = first_fb;	//garde la trace du bloc libre précédent celui qu'on alloue
 	while ((prev_fb != NULL) && (prev_fb->next != fb)) {
 		prev_fb = prev_fb->next ;
 	}
@@ -116,7 +116,7 @@ size_t mem_get_size(void *zone) {
 
 	/* la valeur retournée doit être la taille maximale que
 	 * l'utilisateur peut utiliser dans cette zone */
-	struct ab* adr = zone - sizeof(struct ab);
+	struct ab* adr = (struct ab*) (zone - sizeof(struct ab));
 	return adr->size;
 }
 
@@ -124,9 +124,28 @@ size_t mem_get_size(void *zone) {
  * autres stratégies d'allocation
  */
 struct fb* mem_fit_best(struct fb *list, size_t size) {
-	return NULL;
+	struct fb* min = NULL ;
+	int init = 0 ;
+	while (list != NULL) {
+		if ((init = 0) && (list->size >= size)) {
+			min = list ;
+			init = 1 ;
+		} else if ((list->size >= size) && (list->size < min->size)) {
+			min = list ;
+		}
+		list = list->next;
+	}
+	return min;
 }
 
 struct fb* mem_fit_worst(struct fb *list, size_t size) {
-	return NULL;
+	struct fb* max = NULL ;
+	int init = 0 ;
+	if ((init = 0) && (list->size >= size)) {
+			max = list ;
+			init = 1 ;
+	} else if ((list->size >= size) && (list->size < max->size)) {
+			max = list ;
+	}
+	return max;
 }

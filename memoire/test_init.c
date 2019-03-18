@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
 		tab2[2] = 61 ;
 		printf("%d   %d   %d\n", tab1[0], tab1[1], tab1[2]) ;	//attention, printf utilise des malloc
 		printf("%d   %d   %d\n", tab2[0], tab2[1], tab2[2]) ;
+		printf("%ld\n", mem_get_size(tab1)) ;
 	}
 
 	// TEST OK
