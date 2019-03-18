@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define NB_TESTS 10
+#define NB_TESTS 1
 
 int main(int argc, char *argv[]) {
 	fprintf(stderr, "Test réalisant de multiples fois une initialisation suivie d'une alloc max.\n"
@@ -13,7 +13,16 @@ int main(int argc, char *argv[]) {
 	for (int i=0; i<NB_TESTS; i++) {
 		debug("Initializing memory\n");
 		mem_init(get_memory_adr(), get_memory_size());
-		alloc_max(get_memory_size());
+		int * tab1 = mem_alloc (3 * sizeof(int)) ;
+		tab1[0] = 12 ;
+		tab1[1] = 1 ;
+		tab1[2] = 23 ;
+		int * tab2 = mem_alloc (3 * sizeof(int)) ;
+		tab2[0] = 44 ;
+		tab2[1] = 37 ;
+		tab2[2] = 61 ;
+		printf("%d   %d   %d\n", tab1[0], tab1[1], tab1[2]) ;	//attention, printf utilise des malloc
+		printf("%d   %d   %d\n", tab2[0], tab2[1], tab2[2]) ;
 	}
 
 	// TEST OK

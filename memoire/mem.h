@@ -2,8 +2,14 @@
 #define __MEM_H
 #include <stddef.h>
 
-struct fb;
-struct ab;
+struct fb {
+	size_t size;
+	struct fb* next;
+};
+
+struct ab {
+	size_t size;
+};
 
 /* fonctions principales de l'allocateur */
 void mem_init(void* mem, size_t taille);

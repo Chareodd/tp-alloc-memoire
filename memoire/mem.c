@@ -15,15 +15,6 @@
 
 #define ALIGN(adr)	((((intptr_t)(adr))+((ALIGNMENT)-1)) & ~((ALIGNMENT)-1))
 
-struct fb {
-	size_t size;
-	struct fb* next;
-};
-
-struct ab {
-	size_t size;
-};
-
 static struct fb* first_fb;	//pointeur vers le premier bloc libre
 
 void mem_init(void* mem, size_t taille)
@@ -64,17 +55,38 @@ void mem_fit(mem_fit_function_t *f) {
 }
 
 void *mem_alloc(size_t taille) {
-	taille += sizeof(struct ab);	//on ajoute la place nécessaire pour l'entête
+	if (taille < sizeof (struct fb)) taille = sizeof (struct fb) ; //pour éviter d'avoir des problèmes pour les petite allocations
+	taille += sizeof (struct ab); //pour stocker l'entête
 	taille = ALIGN(taille);	//on ajoute du padding pour avoir une taille multiple de ALIGNMENT
 	__attribute__((unused)) /* juste pour que gcc compile ce squelette avec -Werror */
 	struct fb *fb = mem_fit_fn(first_fb, taille);
 	if (fb == NULL) return NULL;	//si il n'y pas de mémoire disponible, inutile de continuer
-	struct fb *current_fb = first_fb;
-	if (fb == first_fb) first_fb = first_fb->next;
-	while (current_fb != NULL) {
-
+	int taille_ini = fb->size ;
+	struct fb *prev_fb = first_fb;
+	while ((prev_fb != NULL) && (prev_fb->next != fb)) {
+		prev_fb = prev_fb->next ;
 	}
-	return NULL;
+	struct ab *new_ab = (struct ab*) fb ;
+	if (taille_ini - taille < sizeof (struct fb)) {
+		taille = taille_ini; //on ne peut pas séparer la zone libre en 2 zones
+		if (fb == first_fb) {
+			first_fb = fb + sizeof (struct ab) + taille;	//si la zone libre alloué est la première, on met a jour first_fb
+		} else {
+			prev_fb->next = fb->next ;
+		}
+	} else {	//on sépare la zone libre en 2, la zone occupé à renvoyer et la zone libre restante
+		struct fb* new_fb = fb + sizeof (struct ab) + taille ;
+		new_fb->size = taille_ini - taille - sizeof(struct fb) ;
+		if (fb == first_fb) {
+			first_fb = fb + sizeof (struct ab) + taille;	//si la zone libre alloué est la première, on met a jour first_fb
+		} else {
+			prev_fb->next = new_fb;	//on raccorde la zone libre juste avant la zone à allouer avec celle juste après
+		}
+	}
+	new_ab->size = taille ;
+
+
+	return (void *) (new_ab + sizeof(struct ab));
 }
 
 
