@@ -17,13 +17,16 @@ int main(int argc, char *argv[]) {
 		tab1[0] = 12 ;
 		tab1[1] = 1 ;
 		tab1[2] = 23 ;
-		int * tab2 = mem_alloc (3 * sizeof(int)) ;
+		int * tab2 = mem_alloc (5 * sizeof(int)) ;
 		tab2[0] = 44 ;
 		tab2[1] = 37 ;
 		tab2[2] = 61 ;
+		tab2[3] = 97 ;
+		tab2[4] = 105 ;
 		printf("%d   %d   %d\n", tab1[0], tab1[1], tab1[2]) ;	//attention, printf utilise des malloc
-		printf("%d   %d   %d\n", tab2[0], tab2[1], tab2[2]) ;
+		printf("%d   %d   %d   %d   %d\n", tab2[0], tab2[1], tab2[2], tab2[3], tab2[4]) ;
 		printf("%ld\n", mem_get_size(tab1)) ;
+		printf("%ld\n", mem_get_size(tab2)) ;
 	}
 
 	// TEST OK

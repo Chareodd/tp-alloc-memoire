@@ -20,10 +20,10 @@ void* mem_realloc(void *old, size_t new_size);
 /* Itération sur le contenu de l'allocateur */
 /* nécessaire pour le mem_shell */
 void mem_show(void (*print)(void *adr, size_t size, int free));
-size_t mem_get_size(void *zone);
 
 /* Choix de la stratégie et strategies usuelles */
 /* Si vous avez le temps... */
+size_t mem_get_size(void *zone);
 typedef struct fb* (mem_fit_function_t)(struct fb*, size_t);
 
 void mem_fit(mem_fit_function_t*);

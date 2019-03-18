@@ -23,7 +23,7 @@ void mem_init(void* mem, size_t taille)
 	assert(taille == get_memory_size());
 	//Initialisation de la mémoire
 	first_fb = (struct fb*) mem;
-	first_fb->size = taille;
+	first_fb->size = taille - sizeof(struct fb) ;
 	first_fb->next = NULL;
 	mem_fit(&mem_fit_first);
 	return;
@@ -55,28 +55,31 @@ void mem_fit(mem_fit_function_t *f) {
 }
 
 void *mem_alloc(size_t taille) {
-	if (taille < sizeof (struct fb)) taille = sizeof (struct fb) ; //pour éviter d'avoir des problèmes pour les petite allocations
-	taille += sizeof (struct ab); //pour stocker l'entête
 	taille = ALIGN(taille);	//on ajoute du padding pour avoir une taille multiple de ALIGNMENT
 	__attribute__((unused)) /* juste pour que gcc compile ce squelette avec -Werror */
-	struct fb *fb = mem_fit_fn(first_fb, taille);
+	
+	struct fb *fb = (struct fb*) mem_fit_fn(first_fb, taille);	//c'est le bloc à allouer
 	if (fb == NULL) return NULL;	//si il n'y pas de mémoire disponible, inutile de continuer
-	size_t taille_ini = fb->size ;
+	size_t taille_ini = fb->size ;	
+	struct fb *next_fb = fb->next ; //la zone libre après la zone à allouer
+	
 	struct fb *prev_fb = first_fb;	//garde la trace du bloc libre précédent celui qu'on alloue
 	while ((prev_fb != NULL) && (prev_fb->next != fb)) {
 		prev_fb = prev_fb->next ;
 	}
-	struct ab *new_ab = (struct ab*) fb ;
-	if (taille_ini - taille < sizeof (struct fb)) {
-		taille = taille_ini; //on ne peut pas séparer la zone libre en 2 zones
+	
+	struct ab *new_ab = (struct ab*) fb ;	//la zone à retourner
+	if (taille_ini - taille < sizeof (struct fb)) {	//on ne peut pas séparer la zone libre en 2 zones
+		taille = taille_ini;
 		if (fb == first_fb) {
 			first_fb = fb + sizeof (struct ab) + taille;	//si la zone libre alloué est la première, on met a jour first_fb
 		} else {
-			prev_fb->next = fb->next ;
+			prev_fb->next = next_fb ;
 		}
 	} else {	//on sépare la zone libre en 2, la zone occupé à renvoyer et la zone libre restante
 		struct fb* new_fb = fb + sizeof (struct ab) + taille ;
 		new_fb->size = taille_ini - taille - sizeof(struct fb) ;
+		new_fb->next = next_fb ; //on raccorde à la liste de zone libre
 		if (fb == first_fb) {
 			first_fb = fb + sizeof (struct ab) + taille;	//si la zone libre alloué est la première, on met a jour first_fb
 		} else {
@@ -84,7 +87,6 @@ void *mem_alloc(size_t taille) {
 		}
 	}
 	new_ab->size = taille ;
-
 
 	return (void *) (new_ab + sizeof(struct ab));
 }
@@ -116,7 +118,7 @@ size_t mem_get_size(void *zone) {
 
 	/* la valeur retournée doit être la taille maximale que
 	 * l'utilisateur peut utiliser dans cette zone */
-	struct ab* adr = (struct ab*) (zone - sizeof(struct ab));
+	struct ab* adr = (struct ab*)(zone) - sizeof(struct ab);
 	return adr->size;
 }
 
